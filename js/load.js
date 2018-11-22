@@ -11,7 +11,7 @@ var loadState = {
     game.load.image('star', 'assets/star.png')
     game.load.image('button', 'assets/button.png')
     game.load.image('ground', 'assets/platform.png')
-    game.load.spritesheet('player', 'assets/dude.png', 32, 48)
+    game.load.spritesheet('player', 'assets/Good_Guy_v2.png', 64, 64)
     game.load.spritesheet('baddie', 'assets/baddie.png', 32, 32)
     game.load.audio('point','assets/point.mp3')
   },

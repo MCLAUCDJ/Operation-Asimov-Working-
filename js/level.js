@@ -1,11 +1,21 @@
-<<<<<<< HEAD
-var baddieNumber = 5;
-var doggyNumber = 5;
+//Variables that control waves
+var baddieNumber = 3;
+var doggyNumber = 3;
+var waveLimit = 3;
+//Counters for enemy kills
+var baddieKills = 0;
+var doggyKills = 0;
+
+var scoreMultiplyer = 1;
+
+var waveCounter = 1;
+
 var levelState = {
   create: function() {
 
-    //Some basic controls for the game
+    //Adds background
     game.add.sprite(0,0,'bg');
+    //The controls for the game
     this.controls = game.input.keyboard.addKeys(
       {
         'Up' : Phaser.KeyCode.W,
@@ -16,23 +26,28 @@ var levelState = {
         'aimDown' : Phaser.KeyCode.DOWN,
         'aimRight' : Phaser.KeyCode.RIGHT,
         'aimLeft' : Phaser.KeyCode.LEFT,
-        'Use' : Phaser.KeyCode.SPACEBAR
+        'Use' : Phaser.KeyCode.SPACEBAR,
+        'dropWeapon' : Phaser.KeyCode.SHIFT
       }
     );
 
     //Create the player
-    player = game.add.sprite(game.world.centerX, game.world.centerY, 'Player')
+    player = game.add.sprite(game.world.centerX, game.world.centerY, 'weapon')
     game.physics.arcade.enable(player);
     player.body.collideWorldBounds = true;
     player.anchor.setTo(0.5, 0.5)
     player.MoveSpeed = 300
     player.hacking = 0
     player.facing = 90;
-    player.invincibleFrames = 250;
+    player.invincibleFrames = 500;
+    player.scale.setTo(0.75, 0.75);
+    //player.alpha = 0;
 
-    playerWeapon = player.addChild(game.make.sprite(0, 0, 'weapon'));
+    //Add player weapon
+    playerWeapon = player.addChild(game.make.sprite(0, 0, 'Player'));
     playerWeapon.anchor.setTo(0.5, 0.5)
 
+    //
     USB = this.add.weapon(100, 'USB');
     USB.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
     USB.bulletKillType = Phaser.Weapon.KILL_DISTANCE;
@@ -40,54 +55,95 @@ var levelState = {
     USB.bulletAngleOffset = 0;
     USB.bulletSpeed = 400;
     USB.fireRate = 450
-    USB.trackSprite(playerWeapon, 16, 0, true);
+    USB.trackSprite(playerWeapon, (playerWeapon / 2), 0, true);
     USB.bulletRotateToVelocity;
     weaponType = USB;
 
+    //
     playerRifle = game.add.weapon(10,'playerBullet');
     playerRifle.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
     playerRifle.bulletSpeed = 400;
     playerRifle.fireRate = 200;
     playerRifle.bulletAngleVariance = 5;
-    playerRifle.trackSprite(playerWeapon, 16, 0, true);  //Fire from enemy position
+    playerRifle.trackSprite(playerWeapon, (playerWeapon / 2), 0, true);  //Fire from enemy position
 
+    //
     playerCharge = game.add.weapon(3,'playerPointyBullet');
     playerCharge.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
     playerCharge.bulletKillType = Phaser.Weapon.KILL_DISTANCE;
     playerCharge.bulletKillDistance = 30;
     playerCharge.bulletAngleOffset = 0;
-    playerCharge.bulletSpeed = player.MoveSpeed + 50;
+    playerCharge.bulletSpeed = player.MoveSpeed + 75;
     playerCharge.trackSprite(playerWeapon, 16, 0, true);
 
-
+    //Creates ranged enmey group and creates an array for ranged weapons
     rangedEnemies = game.add.group(); //A group to hold the enemy objects
     rangedEnemies.enableBody = true;
     weapon = []; //An array to hold the weapon objects
 
+    //Creates melee enmey group and creates an array for melee weapons
     meleeEnemies = game.add.group(); //A group to hold the enemy objects
     meleeEnemies.enableBody = true;
     melee = []; //An array to hold the weapon objects
 
+    //Function that generates enemies
     this.generateEnemy();
 
-    console.log(game.world.height);
+    //Score text
+    scoreText = game.add.text(16, 16, 'Score: ' + game.global.score, { fontSize: '32px', fill: '#ff0000' });
 
   },
 
   update: function() {  //This function runs every frame
 
-    //Movement code
+    //Movement code for player and enemies
     this.PlayerMovement();
     this.EnemyController();
+    //Collision detection
     this.CollisionDetect();
+    //Function that controls waves and checks how many enemies are alive
+    this.waveControler();
+
+  },
+
+  waveControler: function(){
+    if(waveCounter <= waveLimit){
+
+      if(baddie.alive == false && doggy.alive == false){
+        baddieKills = 0;
+        doggyKills = 0;
+        waveCounter ++;
+        this.generateEnemy();
+        //console.log(waveCounter);
+        console.log(waveCounter);
+      }
+    }else if(waveCounter == waveLimit){
+      baddieKills = 0;
+      doggyKills = 0;
+      waveCounter ++;
+      //console.log(waveCounter);
+      console.log(waveCounter);
+      //generateBoss();
+    }else if (waveCounter > waveLimit) {
+      game.state.start('win');
+    }
 
   },
 
   generateEnemy: function(){
-    for(i = 0; i < baddieNumber; i++){
+    for(i = 0; i < (baddieNumber + waveCounter); i++){
       //Create an enemy in a random position
-
-      baddie = rangedEnemies.create(this.game.world.randomX, this.game.world.randomY, 'Baddie');
+      baddieSpawnLocation = Math.floor((Math.random() * 4) + 1);
+      if(baddieSpawnLocation == 1){
+        baddie = rangedEnemies.create(0, this.game.world.randomY, 'Baddie');
+      }else if (baddieSpawnLocation == 2) {
+        baddie = rangedEnemies.create(game.world.width, this.game.world.randomY, 'Baddie');
+      }else if (baddieSpawnLocation == 3) {
+        baddie = rangedEnemies.create(this.game.world.randomX, 0, 'Baddie');
+      }else if (baddieSpawnLocation == 4) {
+        baddie = rangedEnemies.create(this.game.world.randomX, game.world.height, 'Baddie');
+      }
+      //Set atrabuts for ranged enemies
       baddie.anchor.setTo(0.5, 0.5);
       game.physics.arcade.enable(baddie);
       baddie.body.collideWorldBounds = true;
@@ -97,18 +153,28 @@ var levelState = {
       baddie.body.bounce.setTo(1,1);
 
     //Add a weapon to each enemy
-      Rifle = game.add.weapon(3,'bullet');
+      Rifle = game.add.weapon(1,'bullet');
       Rifle.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
       Rifle.bulletSpeed = 200;
       Rifle.fireRate = 300;
       Rifle.bulletAngleVariance = 0;
-      Rifle.trackSprite(baddie, 0, 0, true);  //Fire from enemy position
+      Rifle.trackSprite(baddie, (baddie.width / 2), 0, true);  //Fire from enemy position
       weapon[i] = Rifle;  //Add weapon to array
 
     }
-    for(i = 0; i < doggyNumber; i++){
+    for(i = 0; i < (doggyNumber + waveCounter); i++){
       //Create an enemy in a random position
-      doggy = meleeEnemies.create(this.game.world.randomX, this.game.world.randomY, 'Doggy');
+      doggySpawnLocation = Math.floor((Math.random() * 4) + 1);
+      if(doggySpawnLocation == 1){
+        doggy = meleeEnemies.create(0, this.game.world.randomY, 'Doggy');
+      }else if (doggySpawnLocation == 2) {
+        doggy = meleeEnemies.create(game.world.width, this.game.world.randomY, 'Doggy');
+      }else if (doggySpawnLocation == 3) {
+        doggy = meleeEnemies.create(this.game.world.randomX, 0, 'Doggy');
+      }else if (doggySpawnLocation == 4) {
+        doggy = meleeEnemies.create(this.game.world.randomX, game.world.hight, 'Doggy');
+      }
+      //Set atrabuts for melee enemies
       doggy.anchor.setTo(0.5, 0.5);
       game.physics.arcade.enable(doggy);
       doggy.body.collideWorldBounds = true;
@@ -118,18 +184,17 @@ var levelState = {
       doggy.MoveSpeed = 400;
       doggy.body.immovable = true;
 
-      //doggy.tint = i * 0x112233;
-
+      //Add a weapon for each enemey
       Charge = game.add.weapon(3, 'PointyBullet')
       Charge.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
       Charge.bulletKillType = Phaser.Weapon.KILL_DISTANCE;
       Charge.bulletKillDistance = 30;
       Charge.bulletAngleOffset = 0;
       Charge.bulletSpeed = player.MoveSpeed + 20;
-      Charge.trackSprite(doggy, 16, 0, true);
+      Charge.trackSprite(doggy, (doggy.width / 2), 0, true);
       melee[i] = Charge;
     }
-    //rangedEnemies.setAll(baddie.tint, 0xff0000);
+
   },
 
   CollisionDetect : function(){
@@ -198,6 +263,7 @@ var levelState = {
     },
 
   PlayerMovement : function(){
+    //Movement controls for player
     if(this.controls.Up.isDown && this.controls.Left.isDown){
       player.going = -135;
       game.physics.arcade.velocityFromAngle(player.going, player.MoveSpeed, player.body.velocity);
@@ -226,6 +292,7 @@ var levelState = {
       player.body.velocity.y = 0;
       player.body.velocity.x = 0;
     }
+    //Weapon controls for player
     if(weaponType == playerCharge){
       playerWeapon.angle = player.going;
       playerCharge.fire();
@@ -235,11 +302,17 @@ var levelState = {
     }else{
       this.aim();
     }
+    if(this.controls.dropWeapon.isDown){
+      //Player gets bonus points if they drop weapon
+      game.global.score =+ 300
+      weaponType = USB;
+    }
 
 
   },
 
   aim : function(){
+    //Aiming controls for player
     if(this.controls.aimUp.isDown && this.controls.aimLeft.isDown){
       player.facing = -135
     }else if(this.controls.aimUp.isDown && this.controls.aimRight.isDown){
@@ -268,20 +341,18 @@ var levelState = {
 
 
   Hit: function(player, bullet){
+    //function for when the player gets hit
     //console.log("ouch");
     bullet.kill();
     if (!player.invincible) { //We only damage the player if not invincible
       player.tint = 0xff0000;
       playerWeapon.tint = 0xff0000;
-      /*game.global.lives -= 1;      //we start damage flashing and toggle invincibility
-      livesText.text = 'Lives: ' + game.global.lives;
-      if (game.global.lives <= 0){
-        game.state.start('end');
-      }*/
       this.invincibility_tint();
       this.toggleInvincible();
       game.time.events.add(player.invincibleFrames, this.invincibility_untint, this);
       game.time.events.add(player.invincibleFrames, this.toggleInvincible, this);//and then we add a timer to restore the player to a vulnerable state
+      scoreMultiplyer = 1;
+      game.global.score = game.global.score - 10;
     }
   },
   toggleInvincible: function() {
@@ -299,40 +370,55 @@ var levelState = {
   },
 
   rangeHack: function(bullet, enemy){
-    console.log("hit");
+    //Function for when ranged enemy gets hit
+    game.global.score += (50 * scoreMultiplyer);
+    scoreText.destroy();
+    scoreText = game.add.text(16, 16, 'Score: ' + game.global.score, { fontSize: '32px', fill: '#ff0000' });
+    scoreMultiplyer += 0.1;
+  //  console.log("hit");
+    baddieKills ++;
     bullet.kill();
+    //If the player is using starting weapon then the player gains enemy weapon
       if(weaponType == USB){
         player.body.x = enemy.body.x;
         player.body.y = enemy.body.y;
         weaponType = playerRifle;
       }
+      //Remove enemy and weapon from array
     enemyid = rangedEnemies.getIndex(enemy);
     enemy.kill();
     enemy.alive = false;
     weapon.splice(enemyid, 1);
+    //console.log(baddie.alive);
   },
 
   meleeHack: function(bullet, enemy){
-    console.log("hit");
+    //Function for when ranged enemy gets hit
+    game.global.score += (50 * scoreMultiplyer);
+    scoreMultiplyer += 0.1;
+    doggyKills ++;
+  //  console.log("hit");
     bullet.kill();
+    //If the player is using starting weapon then the player gains enemy weapon
       if(weaponType == USB){
         player.body.x = enemy.body.x;
         player.body.y = enemy.body.y;
         weaponType = playerCharge;
         player.MoveSpeed = 700;
       }
+    //Remove enemy and weapon from array
     enemyid = meleeEnemies.getIndex(enemy);
     enemy.kill();
     enemy.alive = false;
     melee.splice(enemyid, 1);
+    //console.log(doggy.alive);
   },
 
   wallCheck: function(enemy){
-    if(enemy.body.x >= (game.world.width - enemy.width) || enemy.body.x <= 0 || enemy.body.y >= (game.world.height - enemy.width) || enemy.body.y <= 0){
+    //If a ranged enemy hits any wall they will choose a random direction and start traveling that way
+    if(enemy.body.x >= (game.world.width - enemy.width) || enemy.body.x <= 0 || enemy.body.y >= (game.world.height - enemy.width - 10) || enemy.body.y <= 0){
       enemy.facing = Math.floor((Math.random() * 360) + 1);
     }
   }
 
 };
-
->>>>>>> dc7ba191ca234d217974246454c8d76611988b78

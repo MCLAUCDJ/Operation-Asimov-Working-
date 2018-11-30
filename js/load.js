@@ -12,13 +12,14 @@ var loadState = {
     game.load.image('playerBullet', 'assets/Lazer.png');
     game.load.image('playerPointyBullet', 'assets/Pointy_Blue_Lazer.png');
     game.load.image('PointyBullet', 'assets/Pointy_Red_Lazer.png');
-    game.load.spritesheet('Player', 'assets/player.png', 32, 48);
-    game.load.spritesheet('Baddie', 'assets/baddie.png', 32, 32);
-    game.load.spritesheet('Doggy', 'assets/Angry_Robot.png', 32, 32);
+    game.load.image('button', 'assets/button.png');
+    game.load.spritesheet('Player', 'assets/Player_Spritesheat-sheet.png', 60, 50);
+    game.load.spritesheet('Baddie', 'assets/Robot.png', 44, 46);
+    game.load.spritesheet('Doggy', 'assets/Doggy_Spritesheet.png', 88, 32);
   },
 
   create: function() {
-    game.state.start('level'); //Load the menu
+    game.state.start('menu'); //Load the menu
   }
 
 };
